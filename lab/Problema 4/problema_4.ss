@@ -1,6 +1,6 @@
 ;; The first three lines of this file were inserted by DrRacket. They record metadata
 ;; about the language level of this file in a form that our tools can easily process.
-#reader(lib "htdp-advanced-reader.ss" "lang")((modname problema_4) (read-case-sensitive #t) (teachpacks ((lib "drawings.ss" "installed-teachpacks"))) (htdp-settings #(#t constructor repeating-decimal #t #t none #f ((lib "drawings.ss" "installed-teachpacks")) #f)))
+#reader(lib "htdp-advanced-reader.ss" "lang")((modname problema_4) (read-case-sensitive #t) (teachpacks ((lib "drawings.ss" "installed-teachpacks"))) (htdp-settings #(#t constructor repeating-decimal #t #t none #f)))
 ;data una rappresentazione BTR (stringa), restituisce la cifra meno significativa(carattere) 
 ;oppure zero (#\.) se l’argomento è la stringa vuota
 (define lsd
@@ -25,21 +25,13 @@
 ;equivalente in cui le eventuali cifre zero (#\.) in testa, ininfluenti, sono rimosse
 (define normalized-btr
   (lambda (btr-s)
-    (let ( (fb (substring btr-s 0 1)) )
-      (if (string=? fb ".")
-          (normalized-btr (substring btr-s 1))
-          btr-s)
-      )
+    (cond ((= (string-length btr-s) 1) btr-s)
+          ((char=? (string-ref btr-s 0) #\.) (normalized-btr (substring btr-s 1)))
+          (else btr-s)
     )
   )
+)
 
-;date le rappresentazioni BTR di due interi (stringhe) e il riporto in entrata (carattere),
-;restituisce la rappresentazione BTR della somma inclusiva del riporto
-(define btr-carry-sum
-  (lambda (btr-1 btr-2 riporto)
-    (string-append (string (btr-carry (lsd btr-1) (lsd btr-2) riporto)) (string (btr-digit-sum (lsd btr-1) (lsd btr-2) riporto)))
-    )
-  )
 
 (define btr-digit-sum                    ; val:     carattere +/./-
   (lambda (u v c)                        ; u, v, c: caratteri +/./-
@@ -153,3 +145,43 @@
                         ((char=? c #\+)  ; + + +
                          #\+))))) ;
           )))
+
+
+(define delegate-or-point
+  (lambda (str) 
+    (let ((str-len (string-length str)))
+      (if (= str-len 0) 
+          "." 
+          (substring str 0 (- (string-length str) 1))
+    )
+)
+)
+)
+
+;date le rappresentazioni BTR di due interi (stringhe) e il riporto in entrata (carattere),
+;restituisce la rappresentazione BTR della somma inclusiva del riporto
+(define btr-carry-sum
+  (lambda (fst snd carry)
+    (let ((lsd-st (lsd fst)) (lsd-nd (lsd snd)))
+      (let ((result-sum (btr-digit-sum lsd-st lsd-nd carry)) (result-carry (btr-carry lsd-st lsd-nd carry)) )
+        (if (and (= (string-length snd) 1) (char=? result-carry #\.))
+            (string-append (delegate-or-point fst) (string result-sum))
+            (string-append (btr-carry-sum (delegate-or-point fst) (delegate-or-point snd) result-carry) (string result-sum))
+        )
+      )
+    )
+  )
+)
+
+(define btr-sum
+  (lambda (fst snd)
+    (normalized-btr (btr-carry-sum fst snd #\.))
+  )
+)
+
+(btr-sum "-+--" "+") ; => -+-.
+(btr-sum "-+--" "-") ; => -.++
+(btr-sum "+-.+" "-+.-") ; => .
+(btr-sum "-+--+" "-.--") ; => --++.
+(btr-sum "-+-+." "-.-+") ; => -.-.+
+(btr-sum "+-+-." "+.+-") ; => +.+.-
