@@ -16,7 +16,7 @@
 (define head
   (lambda (btr-s)
     (if (string=? btr-s "")
-        #\.
+        ""
         (substring btr-s 0 (- (string-length btr-s) 1)))
     )
   )
@@ -147,26 +147,15 @@
           )))
 
 
-(define delegate-or-point
-  (lambda (str) 
-    (let ((str-len (string-length str)))
-      (if (= str-len 0) 
-          "." 
-          (substring str 0 (- (string-length str) 1))
-    )
-)
-)
-)
-
 ;date le rappresentazioni BTR di due interi (stringhe) e il riporto in entrata (carattere),
 ;restituisce la rappresentazione BTR della somma inclusiva del riporto
 (define btr-carry-sum
   (lambda (fst snd carry)
     (let ((lsd-st (lsd fst)) (lsd-nd (lsd snd)))
-      (let ((result-sum (btr-digit-sum lsd-st lsd-nd carry)) (result-carry (btr-carry lsd-st lsd-nd carry)) )
-        (if (and (= (string-length snd) 1) (char=? result-carry #\.))
-            (string-append (delegate-or-point fst) (string result-sum))
-            (string-append (btr-carry-sum (delegate-or-point fst) (delegate-or-point snd) result-carry) (string result-sum))
+      (let ((result-sum (btr-digit-sum lsd-st lsd-nd carry)) (result-carry (btr-carry lsd-st lsd-nd carry)))
+        (if (and (= (string-length snd) 0) (char=? result-carry #\.))
+            (string-append (head fst) (string result-sum))
+            (string-append (btr-carry-sum (head fst) (head snd) result-carry) (string result-sum))
         )
       )
     )
